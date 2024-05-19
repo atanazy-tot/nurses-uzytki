@@ -1,5 +1,5 @@
 from parse_vacation import parse_vacation
-from src.visualisation.schedule_graph import plot_week_schedule
+from src.visualisation.schedule_graph import plot_week_schedule, plot_nurse_schedule
 import pandas as pd
 
 # Read the data into a DataFrame
@@ -19,4 +19,8 @@ vacation_data.columns = column_names
 
 # Plot schedules for each week
 for week in range(1, 5):
-    plot_week_schedule(df, week, vacation_data, 'employer')
+    plot_week_schedule(df, week, vacation_data)
+
+# Plot schedule for individual nurse
+nurse_id = 4
+plot_nurse_schedule(df, nurse_id, vacation_data)
