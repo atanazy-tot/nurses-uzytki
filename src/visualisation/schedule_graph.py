@@ -1,21 +1,10 @@
-import pandas as pd
 import matplotlib.pyplot as plt
+import matplotlib.transforms
 import numpy as np
-
-# Read the data into a DataFrame
-df = pd.read_csv("timetable_neos_output_2_variant1.csv", sep=';', header=None)
-df = df.iloc[2:]
-df = df.reset_index(drop=True)
-df = df.set_index(df.columns[0])
-df = df.fillna(0).astype(int)
-nurses_total_hours = df.iloc[:-2, -1].tolist()
-df = df.iloc[:, :-1]
-column_names = [f"Day_{k}_Shift_{j}" for k in range(1, 29) for j in range(1, 4)]
-df.columns = column_names
 
 
 # Function to plot a week schedule
-def plot_week_schedule(df, week):
+def plot_week_schedule(df, week, vacation_data, variant):
     fig, ax = plt.subplots(figsize=(15, 10))
 
     # Select data for the specified week
@@ -23,32 +12,62 @@ def plot_week_schedule(df, week):
     end_col = start_col + 21
     week_data = df.iloc[:, start_col:end_col]
 
-    # Plot the nurse schedules
-    for i, nurse in enumerate(week_data.index[:-2]):  # Exclude 'Required' and 'Available' rows
+    if variant == "employer":
+        # Plot the nurse schedules
+        for i, nurse in enumerate(week_data.index[:-2]):  # Exclude 'Required' and 'Available' rows
+            for j, shift in enumerate(week_data.columns):
+                if week_data.loc[nurse, shift] == 1:
+                    ax.add_patch(plt.Rectangle((j, i), 1, 1, color='blue'))
+                elif vacation_data.loc[nurse, shift] == 1:
+                    ax.add_patch(plt.Rectangle((j, i), 1, 1, color='orange'))
+                else:
+                    ax.add_patch(plt.Rectangle((j, i), 1, 1, color='white'))
+        # Annotate required and available nurses at the bottom
         for j, shift in enumerate(week_data.columns):
-            if week_data.loc[nurse, shift] == 1:
-                ax.add_patch(plt.Rectangle((j, i), 1, 1, color='blue'))
-            else:
-                ax.add_patch(plt.Rectangle((j, i), 1, 1, color='white', edgecolor='black'))
+            ax.text(j + 0.5, len(week_data.index) - 2 + 0.5, str(week_data.loc['Nurses_on_shift', shift]), ha='center',
+                    va='center', color='red', fontsize=12)
+            ax.text(j + 0.5, len(week_data.index) - 1 + 0.5, str(week_data.loc['Demanded_nurses', shift]), ha='center',
+                    va='center', color='green', fontsize=12)
 
-    # Annotate required and available nurses
-    for j, shift in enumerate(week_data.columns):
-        ax.text(j + 0.5, 15, str(week_data.loc['Nurses_on_shift', shift]), ha='center', va='center', color='green', fontsize=12)
-        ax.text(j + 0.5, 16, str(week_data.loc['Demanded_nurses', shift]), ha='center', va='center', color='red',
-                fontsize=12)
+        # Adjusting ticks and labels
+        ax.set_xticks(np.arange(len(week_data.columns)))
+        ax.set_xticklabels([f'Day {d + 1}\nShift {s + 1}' for d in range(7) for s in range(3)], rotation=90)
+        ax.xaxis.set_tick_params(labeltop=True, labelbottom=False)
 
-    # Set labels and grid
-    ax.set_xticks(np.arange(len(week_data.columns)) + 0.5)
-    ax.set_xticklabels([f'Day {d + 1}\nShift {s + 1}' for d in range(7) for s in range(3)], rotation=90)
-    ax.set_yticks(np.arange(len(week_data.index)))
-    ax.set_yticklabels(week_data.index)
-    ax.grid(True)
+        ax.set_yticks(np.arange(len(week_data.index)))
+        ax.set_yticklabels(week_data.index)
 
-    # Set plot title
-    plt.title(f'Week {week} Nurse Schedule')
-    plt.show()
+        # Grid and lines
+        ax.set_xticks(np.arange(len(week_data.columns)), minor=True)
+        ax.set_yticks(np.arange(len(week_data.index)), minor=True)
+        ax.grid(which='major', color='black', linestyle='-', linewidth=0.75)
 
+        # Create offset transform by 20 points in x direction
+        dx = 20 / 72.
+        dy = 0 / 72.
+        offset = matplotlib.transforms.ScaledTranslation(dx, dy, fig.dpi_scale_trans)
 
-# Plot schedules for each week
-for week in range(1, 5):
-    plot_week_schedule(df, week)
+        # apply offset transform to all x ticklabels.
+        for label in ax.xaxis.get_majorticklabels():
+            label.set_transform(label.get_transform() + offset)
+
+        # Create offset transform by 5 points in x direction
+        dx = 0 / 72.
+        dy = -15 / 72.
+        offset = matplotlib.transforms.ScaledTranslation(dx, dy, fig.dpi_scale_trans)
+
+        # apply offset transform to all y ticklabels.
+        for label in ax.yaxis.get_majorticklabels():
+            label.set_transform(label.get_transform() + offset)
+
+        ax.set_xlim(0, len(week_data.columns))
+        ax.set_ylim(0, len(week_data.index))
+
+        # Set plot title
+        plt.title(f'Week {week} Nurse Schedule')
+        plt.gca().invert_yaxis()  # To invert y-axis so Nurse 1 is at the top
+        plt.show()
+    elif variant == 'employee':
+        pass
+    else:
+        raise ValueError(f'Invalid variant {variant}. Must be either "employee" or "employer"')
