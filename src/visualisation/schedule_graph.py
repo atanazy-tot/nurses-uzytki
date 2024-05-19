@@ -30,8 +30,8 @@ def plot_week_schedule(df, week, vacation_data, variant):
                     va='center', color='green', fontsize=12)
 
         # Adjusting ticks and labels
-        ax.set_xticks(np.arange(len(week_data.columns)))
-        ax.set_xticklabels([f'Day {d + 1}\nShift {s + 1}' for d in range(7) for s in range(3)], rotation=90)
+        ax.set_xticks(np.arange(0, len(week_data.columns), 3))
+        ax.set_xticklabels([f'Day {d + 1}' for d in range(7)])
         ax.xaxis.set_tick_params(labeltop=True, labelbottom=False)
 
         ax.set_yticks(np.arange(len(week_data.index)))
@@ -40,10 +40,22 @@ def plot_week_schedule(df, week, vacation_data, variant):
         # Grid and lines
         ax.set_xticks(np.arange(len(week_data.columns)), minor=True)
         ax.set_yticks(np.arange(len(week_data.index)), minor=True)
-        ax.grid(which='major', color='black', linestyle='-', linewidth=0.75)
+        # Add thin grey lines to separate nurses and shifts
+        for j in range(len(week_data.index)):
+            ax.axhline(y=j, color='grey', linestyle='-', linewidth=0.5)
+        for j in range(len(week_data.columns)):
+            ax.axvline(x=j, color='grey', linestyle='-', linewidth=0.5)
+        # Draw vertical lines for days
+        for i in range(7):
+            if i != 5:
+                ax.axvline(x=i * 3, color='black', linewidth=1.5)
+        # Mark Saturday start
+        ax.axvline(x=15, color='fuchsia', linestyle='-', linewidth=5)
+        # Mark summary info
+        ax.axhline(y=15, color='black', linestyle='-', linewidth=1.5)
 
         # Create offset transform by 20 points in x direction
-        dx = 20 / 72.
+        dx = 60 / 72.
         dy = 0 / 72.
         offset = matplotlib.transforms.ScaledTranslation(dx, dy, fig.dpi_scale_trans)
 
