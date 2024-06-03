@@ -1,6 +1,6 @@
-def check(output_path: str) -> dict:
+def get_variables_from_neos(output_path: str) -> dict:
     
-    Variables = {}
+    variables = {}
     
     with open(output_path, 'r') as f:
         lines = f.read().splitlines()
@@ -14,7 +14,7 @@ def check(output_path: str) -> dict:
                         end_index = i
                         break
                     
-        # tylko te linie naprawdę zawierają istotne dane, tzn. zmienne 'x'        
+        # tylko te linie naprawdę zawierają istotne dane, tzn. zmienne 'x'
         lines = lines[start_index:end_index]
         
         for i, line in enumerate(lines):
@@ -23,19 +23,19 @@ def check(output_path: str) -> dict:
             variable = tuple([int(x[1:]) for x in variable])
             value = int(temp_line[2])
             
-            Variables[variable] = value
+            variables[variable] = value
             
-    return Variables
+    return variables
 
 
-def timetable(Variables: dict,
-              N: int,
-              J: int,
-              K: int,
-              timetable_path: str,
-              employer_demands: str,
-              variant: str = 'employer',
-              employee_id: int | None = None):
+def create_timetable(Variables: dict,
+                     N: int,
+                     J: int,
+                     K: int,
+                     output_path: str,
+                     employer_demands: str,
+                     variant: str = 'employer',
+                     employee_id: int | None = None):
     
     if variant not in ('employee', 'employer'):
         raise ValueError("Argument 'variant' must be one of 'employee', 'employer'")
@@ -70,7 +70,7 @@ def timetable(Variables: dict,
             temp[i] = work
             # print(temp[i])
             
-        with open(timetable_path, 'w') as f:
+        with open(output_path, 'w') as f:
             print(time, file=f)
             print((';'+';'.join([f'{j+1}' for j in range(J)]))*K, file=f)
             for i in range(1, N+1):
