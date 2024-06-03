@@ -93,6 +93,7 @@ def shifts_justice(neos_output_path: str, data_input_path: str,
 
 # jeszcze do sprawdzenia: jaka część funkcji celu odpowiada za wynik w jakim stopniu?
 # może warto policzyć zadowolenie per zmiana? usuwanie niezadowolonych pielęgniarek? :)
+# TODO: Wymęczyć podsumowanie na podstawie słowników; zamieścić to w głównym skrypcie
 def generate_summary(neos_output_path: str, data_input_path: str, summary_output_path: str):
     pass
 
